@@ -6,13 +6,16 @@
 
 Creates an [AWS Lambda](https://aws.amazon.com/lambda/) function writing to [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) and invoked by [Amazon API Gateway](https://aws.amazon.com/api-gateway/) REST API. 
 
-This implementation includes **AWS X-Ray tracing** for end-to-end observability across API Gateway, Lambda, and DynamoDB.
+This implementation includes **AWS X-Ray tracing** for end-to-end observability and **comprehensive security logging** for audit and compliance.
 
 ![architecture](docs/architecture.png)
 
 ## Features
 
 - **End-to-End Tracing**: AWS X-Ray enabled for API Gateway, Lambda, and DynamoDB operations
+- **Comprehensive Logging**: VPC Flow Logs, API Gateway access logs, CloudTrail, and structured Lambda logs
+- **Security & Compliance**: CloudTrail for API activity, DynamoDB point-in-time recovery and streams
+- **Centralized Log Storage**: S3 bucket with lifecycle policies for long-term log retention
 - **VPC Isolation**: Lambda function runs in private isolated subnet
 - **DynamoDB Integration**: VPC endpoint for secure DynamoDB access
 
@@ -100,11 +103,37 @@ After making API requests, view end-to-end traces in the AWS X-Ray console:
 2. Select "Service Map" to see component interactions
 3. Select "Traces" to view individual request traces with timing details
 
+### Viewing Logs
+
+The stack creates multiple log sources for comprehensive observability:
+
+**CloudWatch Logs:**
+- Lambda logs: `/aws/lambda/apigw_handler` (structured JSON format)
+- VPC Flow Logs: Monitor network traffic patterns
+- API Gateway access logs: Track all API requests with detailed metadata
+
+**CloudTrail:**
+- All AWS API calls are logged to the S3 log archive bucket
+- Includes management events for security auditing
+
+**DynamoDB:**
+- Point-in-time recovery enabled for data protection
+- DynamoDB Streams capture all data modifications
+
+**Query logs using CloudWatch Logs Insights:**
+```
+fields @timestamp, message
+| filter message like /Successfully inserted/
+| sort @timestamp desc
+```
+
 ## Cleanup 
 Run below script to delete AWS resources created by this sample stack.
 ```
 cdk destroy
 ```
+
+**Note:** The S3 log archive bucket has a retention policy and will be retained after stack deletion for compliance purposes.
 
 ## Useful commands
 
